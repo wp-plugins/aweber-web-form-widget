@@ -70,16 +70,16 @@ Also, check any other lists that appear in the first drop down in the Web Form w
 
 == Screenshots ==
 
-1.
-2.
-3.
-4.
-5.
-6.
-7.
-8.
-9.
-10.
+1. 
+2. 
+3. 
+4. 
+5. 
+6. 
+7. 
+8. 
+9. 
+10. 
 
 == Changelog ==
 
