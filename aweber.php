@@ -127,6 +127,9 @@ if (!class_exists('AWeberWebformPlugin')) {
         function printWidget($args) {
             extract($args, EXTR_SKIP);
             echo $before_widget;
+            if ($title) {
+                echo $before_title . $title . $after_title;
+            }
             echo $this->getWebformSnippet();
             echo $after_widget;
         }
@@ -183,6 +186,9 @@ if (!class_exists('AWeberWebformPlugin')) {
 
                     // since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
                     var primary_content = jQuery('#primary-widget-area #<?php echo $this->widgetOptionsName; ?>-content');
+                    primary_content.ajaxError(function(event, request, settings) {
+                        $(this).html('<div class="error">An error occurred while loading this control.</div>');
+                    });
                     jQuery.post(ajaxurl, data, function(response) {
                         jQuery('#primary-widget-area #<?php echo $this->widgetOptionsName; ?>-content').html(response);
                     });
