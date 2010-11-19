@@ -180,8 +180,8 @@ if (!class_exists('AWeberWebformPlugin')) {
                 <div id="<?php echo $this->widgetOptionsName; ?>-content" class="<?php echo $this->widgetOptionsName; ?>-content"><img src="images/loading.gif" height="16" width="16" id="aweber-webform-loading" style="float: left; padding-right: 5px" /> Loading...</div>
                 <script type="text/javascript" >
                 jQuery(document).ready(function($) {
-                    if (typeof(AW) != 'undefined') { return; }
-                    AW = true;
+                    if (typeof(<?php echo $this->widgetOptionsName; ?>) != 'undefined') { return; }
+                    <?php echo $this->widgetOptionsName; ?> = true;
 
                     var data = {
                         action: 'get_widget_control'
