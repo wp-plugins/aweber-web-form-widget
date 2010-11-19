@@ -29,10 +29,10 @@ if (!class_exists('AWeberWebformPlugin')) {
          */
         function AWeberWebformPlugin() {
             $aweber_settings_url = admin_url('options-general.php?page=aweber.php');
-            $this->messages['auth_required'] = '<div id="aweber_auth_error" class="error"><p>AWeber Web Form requires authentication. You will need you to update your <a href="' . $aweber_settings_url . '">settings</a> in order to continue to use AWeber Web Form.</p></div>';
-            $this->messages['auth_error'] = '<div id="aweber_auth_error" class="error"><p>AWeber Web Form authentication failed.  Please verify the <a href="' . admin_url('options-general.php?page=aweber.php') . '">settings</a> to continue to use AWeber Web Form.</p></div>';
-            $this->message['auth_failed'] = '<div id="aweber_auth_failed" class="error"><p>AWeber Web Form authentication failed.  If this continues, click Remove Connection and re-authorize AWeber Web Form.</p></div>';
-            $this->message['access_token_failed'] = '<div id="aweber_access_token_failed" class="error"><p>Invalid authorization code.  Please make sure you entered it correctly.</p></div>';
+            $this->messages['auth_required'] = '<div id="aweber_auth_error" class="error">AWeber Web Form requires authentication. You will need you to update your <a href="' . $aweber_settings_url . '">settings</a> in order to continue to use AWeber Web Form.</div>';
+            $this->messages['auth_error'] = '<div id="aweber_auth_error" class="error">AWeber Web Form authentication failed.  Please verify the <a href="' . admin_url('options-general.php?page=aweber.php') . '">settings</a> to continue to use AWeber Web Form.</div>';
+            $this->messages['auth_failed'] = '<div id="aweber_auth_failed" class="error">AWeber Web Form authentication failed.  If this continues, click Remove Connection and re-authorize AWeber Web Form.</div>';
+            $this->messages['access_token_failed'] = '<div id="aweber_access_token_failed" class="error">Invalid authorization code.  Please make sure you entered it correctly.</div>';
         }
 
         /**
