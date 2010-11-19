@@ -9,19 +9,27 @@ Author URI: http://labs.aweber.com
 License: MIT
 */
 
+if (function_exists('register_activation_hook')) {
+    if (!function_exists('aweber_web_forms_activate')) {
+        function aweber_web_forms_activate() {
+            if (version_compare(phpversion(), '5.2', '<')) {
+                trigger_error('', E_USER_ERROR);
+            }
+        }
+    }
+
+    register_activation_hook(__FILE__, 'aweber_web_forms_activate');
+}
+
 if (isset($_GET['action']) and $_GET['action'] == 'error_scrape') {
-    die('Sorry, AWeber Web Forms requires PHP 5.2 or higher.');
+    die('Sorry, AWeber Web Forms requires PHP 5.2 or higher. Please deactivate AWeber Web Forms.');
 }
 
 // Initialize plugin.
 if (!class_exists('AWeberWebformPlugin')) {
-    if (version_compare(phpversion(), '5.2', '<')) {
-        trigger_error('', E_USER_ERROR);
-    } else {
-        require_once(dirname(__FILE__) . '/php/aweber_api/aweber_api.php');
-        require_once(dirname(__FILE__) . '/php/aweber_webform_plugin.php');
-        $aweber_webform_plugin = new AWeberWebformPlugin();
-    }
+    require_once(dirname(__FILE__) . '/php/aweber_api/aweber_api.php');
+    require_once(dirname(__FILE__) . '/php/aweber_webform_plugin.php');
+    $aweber_webform_plugin = new AWeberWebformPlugin();
 }
 
 // Initialize admin panel.

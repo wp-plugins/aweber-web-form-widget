@@ -80,7 +80,7 @@ class AWeberWebformPlugin {
         */
     function printAdminPage() {
         $options = $this->getAdminOptions();
-        include('aweber_forms_import_admin.php');
+        include(dirname(__FILE__) . '/aweber_forms_import_admin.php');
     }
 
     /**
