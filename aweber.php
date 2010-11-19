@@ -177,20 +177,26 @@ if (!class_exists('AWeberWebformPlugin')) {
                 }
             } else {
                 ?>
-                <div id="<?php echo $this->widgetOptionsName; ?>-content"><img src="images/loading.gif" height="16" width="16" id="aweber-webform-loading" style="float: left; padding-right: 5px" /> Loading...</div>
+                <div id="<?php echo $this->widgetOptionsName; ?>-content" class="<?php echo $this->widgetOptionsName; ?>-content"><img src="images/loading.gif" height="16" width="16" id="aweber-webform-loading" style="float: left; padding-right: 5px" /> Loading...</div>
                 <script type="text/javascript" >
                 jQuery(document).ready(function($) {
+                    if (typeof(AW) != 'undefined') { return; }
+                    AW = true;
+
                     var data = {
                         action: 'get_widget_control'
                     };
 
                     // since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
-                    var primary_content = jQuery('#primary-widget-area #<?php echo $this->widgetOptionsName; ?>-content');
-                    primary_content.ajaxError(function(event, request, settings) {
-                        $(this).html('<div class="error">An error occurred while loading this control.</div>');
-                    });
-                    jQuery.post(ajaxurl, data, function(response) {
-                        jQuery('#primary-widget-area #<?php echo $this->widgetOptionsName; ?>-content').html(response);
+                    var primary_content = jQuery('.<?php echo $this->widgetOptionsName; ?>-content');
+                    primary_content.each(function() {
+                        var this_ = jQuery(this);
+                        this_.ajaxError(function(event, request, settings) {
+                            this_.html('<div class="error">An error occurred while loading this control.</div>');
+                        });
+                        jQuery.post(ajaxurl, data, function(response) {
+                            this_.html(response);
+                        });
                     });
                 });
                 </script>
@@ -285,7 +291,7 @@ if (!class_exists('AWeberWebformPlugin')) {
             // The HTML form will go here
 ?>
     <?php if (!empty($list_web_forms)): ?>
-    <select class="widefat" name="<?php echo $this->widgetOptionsName; ?>[list]" id="<?php echo $this->widgetOptionsName; ?>-list">
+    <select class="widefat <?php echo $this->widgetOptionsName; ?>-list" name="<?php echo $this->widgetOptionsName; ?>[list]" id="<?php echo $this->widgetOptionsName; ?>-list">
         <option value="">Step 1: Select A List</option>
         <?php foreach ($list_web_forms as $this_list_data): ?>
         <?php $this_list = $this_list_data['list']; ?>
@@ -296,7 +302,7 @@ if (!class_exists('AWeberWebformPlugin')) {
     <br />
     <br />
     <?php foreach ($list_web_forms as $this_list_id => $forms): ?>
-    <select class="widefat <?php echo $this->widgetOptionsName; ?>-form-select" name="<?php echo $this->widgetOptionsName; ?>[<?php echo $this_list_id; ?>][webform]" id="<?php echo $this->widgetOptionsName; ?>-<?php echo $this_list_id; ?>-webform">
+    <select class="widefat <?php echo $this->widgetOptionsName; ?>-form-select <?php echo $this->widgetOptionsName; ?>-<?php echo $this_list_id; ?>-webform" name="<?php echo $this->widgetOptionsName; ?>[<?php echo $this_list_id; ?>][webform]" id="<?php echo $this->widgetOptionsName; ?>-<?php echo $this_list_id; ?>-webform">
         <option value="">Step 2: Select A Web Form</option>
         <?php foreach ($forms['web_forms'] as $this_form): ?>
         <option value="<?php echo $this_form->url; ?>"<?php echo ($this_form->url == $webform) ? ' selected="selected"' : ''; ?>><?php echo $this_form->name; ?></option>
@@ -312,7 +318,7 @@ if (!class_exists('AWeberWebformPlugin')) {
         value="1"/>
 
     <br /><br />
-    <a id="<?php echo $this->widgetOptionsName; ?>-form-preview" href="#" target="_blank">preview form</a>
+    <a id="<?php echo $this->widgetOptionsName; ?>-form-preview" class="<?php echo $this->widgetOptionsName; ?>-form-preview" href="#" target="_blank">preview form</a>
     <?php else: ?>
     This AWeber account does not currently have any completed web forms.
     <br /><br />
@@ -328,13 +334,16 @@ if (!class_exists('AWeberWebformPlugin')) {
             }
 
             function listDropDown() {
-                return jQuery('#primary-widget-area select#<?php echo $this->widgetOptionsName; ?>-list');
+                return jQuery('.<?php echo $this->widgetOptionsName; ?>-list');
             }
 
             function currentFormDropDown() {
-                var list = listDropDown().val();
+                var list;
+                listDropDown().each(function() {
+                    list = jQuery(this).val();
+                });
                 if (list != "") {
-                    return jQuery('#primary-widget-area select#<?php echo $this->widgetOptionsName; ?>-' + list + '-webform');
+                    return jQuery('.<?php echo $this->widgetOptionsName; ?>-' + list + '-webform');
                 }
                 return undefined;
             }
@@ -343,32 +352,42 @@ if (!class_exists('AWeberWebformPlugin')) {
                 hideFormSelectors();
                 var dropdown = currentFormDropDown();
                 if (dropdown != undefined) {
-                    dropdown.show();
+                    dropdown.each(function() {
+                        jQuery(this).show();
+                    });
                 }
             }
 
             function updatePreviewLink() {
                 var form_url = "";
-                var preview = jQuery('#primary-widget-area #<?php echo $this->widgetOptionsName; ?>-form-preview');
+                var preview = jQuery('.<?php echo $this->widgetOptionsName; ?>-form-preview');
                 var form_dropdown = currentFormDropDown();
                 if (form_dropdown != undefined) {
-                    form_url = form_dropdown.val();
+                    form_dropdown.each(function() {
+                        form_url = jQuery(this).val();
+                    });
                 }
                 if (form_url == "") {
-                    preview.attr('href', '#');
-                    preview.hide();
+                    preview.each(function() {
+                        jQuery(this).attr('href', '#');
+                        jQuery(this).hide();
+                    });
                 } else {
                     form_url = form_url.split('/');
                     var form_id = form_url.pop();
                     var form_type = form_url.pop();
                     if (form_type == 'web_form_split_tests') {
-                        preview.attr('href', '#');
-                        preview.hide();
+                        preview.each(function() {
+                            jQuery(this).attr('href', '#');
+                            jQuery(this).hide();
+                        });
                     } else {
-                        preview.show();
+                        preview.each(function() { jQuery(this).show(); });
                         var hash = form_id % 100;
                         hash = ((hash < 10) ? '0' : '') + hash;
-                        preview.attr('href', 'http://forms.aweber.com/form/' + hash + '/' + form_id + '.html');
+                        preview.each(function() {
+                            jQuery(this).attr('href', 'http://forms.aweber.com/form/' + hash + '/' + form_id + '.html');
+                        });
                     }
                 }
             }
@@ -376,15 +395,17 @@ if (!class_exists('AWeberWebformPlugin')) {
             updateViewableFormSelector();
             updatePreviewLink();
 
-            listDropDown().change(function() {
-                updateViewableFormSelector();
-                var form_dropdown = currentFormDropDown();
-                if (form_dropdown != undefined) {
-                    form_dropdown.val('');
-                }
-                updatePreviewLink();
+            listDropDown().each(function() {
+                jQuery(this).change(function() {
+                    updateViewableFormSelector();
+                    var form_dropdown = currentFormDropDown();
+                    if (form_dropdown != undefined) {
+                        form_dropdown.val('');
+                    }
+                    updatePreviewLink();
+                });
             });
-            jQuery('#primary-widget-area .<?php echo $this->widgetOptionsName; ?>-form-select').each(function() {
+            jQuery('.<?php echo $this->widgetOptionsName; ?>-form-select').each(function() {
                 jQuery(this).change(function() {
                     updatePreviewLink();
                 });
