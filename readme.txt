@@ -83,10 +83,17 @@ Also, check any other lists that appear in the first drop down in the Web Form w
 
 == Changelog ==
 
+= 1.0.1 =
+* Remove reliance on #primary-widget-area in theme
+* Add check for PHP 5.2+
+
 = 1.0 =
 * Initial release.
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+Bugfix to address loading issues with certain WordPress themes.
 
 = 1.0 =
  * Initial release.
