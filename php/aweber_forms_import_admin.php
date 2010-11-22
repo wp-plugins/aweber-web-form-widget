@@ -38,7 +38,7 @@
                         list($consumer_key, $consumer_secret, $access_key, $access_secret) = null;
                     }
                     if (!$access_secret) {
-                        echo $this->message['access_token_failed'];
+                        echo $this->messages['access_token_failed'];
                     } else {
                         update_option('AWeberWebformPluginAdminOptions', array(
                             'consumer_key' => $consumer_key,
@@ -59,7 +59,7 @@
                     }
                     
                     if (!$account) {
-                        echo $this->message['auth_failed'];
+                        echo $this->messages['auth_failed'];
                     }
                     
                     $authorize_success = True;
