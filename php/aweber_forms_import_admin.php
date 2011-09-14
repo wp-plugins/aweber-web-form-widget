@@ -31,10 +31,11 @@
                 elseif ($oauth_id and !$pluginAdminOptions['access_secret']) {
                     // Then they just saved a key and didn't remove anything
                     // Check it's validity then save it for later use
-                    
                     try {
                         list($consumer_key, $consumer_secret, $access_key, $access_secret) = AWeberAPI::getDataFromAweberID($oauth_id);
                     } catch (AWeberException $e) {
+                        list($consumer_key, $consumer_secret, $access_key, $access_secret) = null;
+                    } catch (AWeberOAuthException $e) {
                         list($consumer_key, $consumer_secret, $access_key, $access_secret) = null;
                     }
                     if (!$access_secret) {
@@ -56,12 +57,12 @@
                         $account = $aweber->getAccount($access_key, $access_secret);
                     } catch (AWeberResponseError $e) {
                         $account = null;
+                    } catch (AWeberOAuthException $e) {
+                        $account = null;
                     }
-                    
                     if (!$account) {
                         echo $this->messages['auth_failed'];
                     }
-                    
                     $authorize_success = True;
                     $button_value = 'Remove Connection';
                 } 
