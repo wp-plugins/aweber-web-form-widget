@@ -3,7 +3,7 @@
 Plugin Name: AWeber Web Forms
 Plugin URI: http://labs.aweber.com
 Description: Adds your AWeber Web Form to your sidebar
-Version: 1.0.2
+Version: 1.0.3
 Author: AWeber Communications, Inc.
 Author URI: http://labs.aweber.com
 License: MIT

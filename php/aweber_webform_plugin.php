@@ -166,6 +166,7 @@ class AWeberWebformPlugin {
             ?>
             <div id="<?php echo $this->widgetOptionsName; ?>-content" class="<?php echo $this->widgetOptionsName; ?>-content"><img src="images/loading.gif" height="16" width="16" id="aweber-webform-loading" style="float: left; padding-right: 5px" /> Loading...</div>
             <script type="text/javascript" >
+
             jQuery(document).ready(function($) {
                 if (typeof(<?php echo $this->widgetOptionsName; ?>) != 'undefined') { return; }
                 <?php echo $this->widgetOptionsName; ?> = true;
@@ -175,15 +176,9 @@ class AWeberWebformPlugin {
                 };
 
                 // since 2.8 ajaxurl is always defined in the admin header and points to admin-ajax.php
-                var primary_content = jQuery('.<?php echo $this->widgetOptionsName; ?>-content');
-                primary_content.each(function() {
-                    var this_ = jQuery(this);
-                    this_.ajaxError(function(event, request, settings) {
-                        this_.html('<div class="error">An error occurred while loading this control.</div>');
-                    });
-                    jQuery.post(ajaxurl, data, function(response) {
-                        this_.html(response);
-                    });
+                jQuery.post(ajaxurl, data, function(response) {
+                    var primary_content = jQuery('.<?php echo $this->widgetOptionsName; ?>-content');
+                    primary_content.each(function() { jQuery(this).html(response); });
                 });
             });
             </script>
