@@ -4,7 +4,7 @@ Donate link: http://www.aweber.com
 Tags: email, marketing, email marketing, webform, web, form, aweber, mailing list, API, newsletter
 Requires at least: 2.7.0
 Tested up to: 3.2.1
-Stable tag: 1.0.3
+Stable tag: 1.0.4
 
 This widget allows you to quickly and easily install an AWeber web form on your Wordpress blog using AWeber's API.
 
@@ -82,6 +82,9 @@ Also, check any other lists that appear in the first drop down in the Web Form w
 10. 
 
 == Changelog ==
+= 1.0.4 =
+* Fixed issue where PHP NOTICES where being raised for unset variables.  (credits: kangkor, Curtiss Grymala)
+
 = 1.0.3 =
 * Fixed issue where the webform widget would not refresh its drop-down lists properly when using the latest versions of WordPress.
 * Fixed issue where the webform widget would not prompt for authentication when the app is disconnected from the AWeber customer account.
