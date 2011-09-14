@@ -113,12 +113,26 @@ class AWeberWebformPlugin {
         */
     function printWidget($args) {
         extract($args, EXTR_SKIP);
-        echo $before_widget;
-        if ($title) {
-            echo $before_title . $title . $after_title;
+
+        if (isset($before_widget) && !empty($before_widget)) {
+            echo $before_widget;
         }
+
+        if (isset($before_title) && !empty($before_title)) {
+            echo $before_title;
+        }
+        if (isset($title) && !empty($title)) {
+            echo $title;
+        }
+        if (isset($after_title) && !empty($after_title)) {
+            echo $after_title;
+        }
+
         echo $this->getWebformSnippet();
-        echo $after_widget;
+
+        if (isset($after_widget) && !empty($after_widget)) {
+            echo $after_widget;
+        }
     }
 
     /**
