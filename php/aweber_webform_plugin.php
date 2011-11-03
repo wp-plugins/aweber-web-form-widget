@@ -18,8 +18,12 @@ class AWeberWebformPlugin {
         $aweber_settings_url = admin_url('options-general.php?page=aweber.php');
         $this->messages['auth_required'] = '<div id="aweber_auth_error" class="error">AWeber Web Form requires authentication. You will need you to update your <a href="' . $aweber_settings_url . '">settings</a> in order to continue to use AWeber Web Form.</div>';
         $this->messages['auth_error'] = '<div id="aweber_auth_error" class="error">AWeber Web Form authentication failed.  Please verify the <a href="' . admin_url('options-general.php?page=aweber.php') . '">settings</a> to continue to use AWeber Web Form.</div>';
-        $this->messages['auth_failed'] = '<div id="aweber_auth_failed" class="error">AWeber Web Form authentication failed.  If this continues, click Remove Connection and re-authorize AWeber Web Form.</div>';
+        $this->messages['auth_failed'] = '<div id="aweber_auth_failed" class="error">AWeber Web Form authentication failed.</div>';
         $this->messages['access_token_failed'] = '<div id="aweber_access_token_failed" class="error">Invalid authorization code.  Please make sure you entered it correctly.</div>';
+        $this->messages['signup_text_too_short'] = '<div id="aweber_signup_text_too_long" class="error">The signup text was too short. Please make sure it is at least 7 characters.</div>';
+        $this->messages['no_list_selected'] = '<div id="aweber_no_list_selected" class="error">Your changes were not saved, as no list was selected.</div>';
+
+        $this->ensure_defaults();
     }
 
     /**
@@ -29,8 +33,235 @@ class AWeberWebformPlugin {
         * @return void
         */
     function init() {
-        $this->getAdminOptions();
-        $this->getWidgetOptions();
+    }
+
+    function ensure_defaults() {
+        $pluginAdminOptions = get_option($this->adminOptionsName);
+        update_option('AWeberWebformPluginAdminOptions', array(
+            'consumer_key'    => $pluginAdminOptions['consumer_key'],
+            'consumer_secret' => $pluginAdminOptions['consumer_secret'],
+            'access_key'      => $pluginAdminOptions['access_key'],
+            'access_secret'   => $pluginAdminOptions['access_secret'],
+        ));
+        $options = get_option($this->widgetOptionsName);
+        $keys = array(
+            'list',
+            'webform',
+            'form_snippet',
+            'list_id_create_subscriber',
+        );
+        foreach ($keys as $key) {
+            $options[$key] = $options[$key];
+        }
+        $keys = array(
+            'create_subscriber_comment_checkbox' => 'ON',
+            'create_subscriber_registration_checkbox' => 'ON',
+            'create_subscriber_signup_text' => "Sign up to our newsletter!",
+        );
+        foreach ($keys as $key => $value) {
+            if ($options[$key] == null)
+                $options[$key] = $value;
+        }
+        update_option($this->widgetOptionsName, $options);
+    }
+
+    // Create the function to output the contents of our Dashboard Widget
+
+    function aweber_dashboard_widget_function() {
+        define('DOING_AJAX', true);
+        wp_dashboard_cached_rss_widget('aweber_dashboard_widget', 'wp_dashboard_rss_output');
+        $pluginAdminOptions = get_option($this->adminOptionsName);
+        $options = get_option($this->widgetOptionsName);
+        if ($pluginAdminOptions['access_key']) {
+            extract($pluginAdminOptions);
+            try {
+                $aweber = $this->_get_aweber_api($consumer_key, $consumer_secret);
+                $account = $aweber->getAccount($access_key, $access_secret);
+            } catch (AWeberException $e) {
+                $account = null;
+            }
+            if (!$account) {
+                $this->deauthorize();
+                $pluginAdminOptions = get_option($this->adminOptionsName);
+                $options = get_option($this->widgetOptionsName);
+                echo $this->messages['auth_failed'];
+            }
+            else {
+                try {
+                    if (is_numeric($options['list_id_create_subscriber'])) {
+                        $list = $account->loadFromUrl('/accounts/' . $account->id . '/lists/' . $options['list_id_create_subscriber']);
+                    ?>
+                    <ul>
+                        <li>
+                            <strong>List name: </strong><?php echo $list->name;?> <br>
+                        </li>
+                        <li>
+                            <strong>Subscribed today to this list: </strong><?php echo $list->total_subscribers_subscribed_today;?> <br>
+                        </li>
+                        <li>
+                            <strong>Subscribed yesterday to this list: </strong><?php echo $list->total_subscribers_subscribed_yesterday;?> <br>
+                        </li>
+                        <li>
+                            <strong>Total subscribers on this list: </strong><?php echo $list->total_subscribed_subscribers;?> <br>
+                        </li>
+                    </ul>
+                    <?php
+                    }
+                }
+                catch (Exception $exc) {
+                    #List ID was not in this account
+                    if ($exc->type === 'NotFoundError') {
+                        $options = get_option($this->widgetOptionsName);
+                        $options['list_id_create_subscriber'] = null;
+                        update_option($this->widgetOptionsName, $options);
+                    }
+                }
+            }
+        }
+        else {
+        }
+        ?>
+            </br>
+            <a href="https://www.aweber.com/login.htm" target="_blank">Login to AWeber</a>
+        <?php
+    }
+
+    // Create the function use in the action hook
+
+    function aweber_add_dashboard_widgets() {
+        $widget_options = get_option('dashboard_widget_options');
+        if (!isset($widget_options['aweber_dashboard_widget'])) {
+            $widget_options['aweber_dashboard_widget'] = array(
+                'items' => 2,
+                'show_summary' => 1,
+                'show_author' => 0,
+                'show_date' => 1,
+            );
+        }
+        $widget_options['aweber_dashboard_widget']['link'] = apply_filters('aweber_dashboard_widget_link',  __('http://aweber.com/blog/'));
+        $widget_options['aweber_dashboard_widget']['url'] = apply_filters('aweber_dashboard_widget_url',  __('http://aweber.com/blog/feed'));
+        $widget_options['aweber_dashboard_widget']['title'] = apply_filters('aweber_dashboard_widget_title',  __('AWeber'));
+        update_option('dashboard_widget_options', $widget_options);
+
+        wp_add_dashboard_widget('aweber_dashboard_widget', $widget_options['aweber_dashboard_widget']['title'], array($this, 'aweber_dashboard_widget_function'), array($this, 'aweber_dashboard_widget_control'));
+        // Globalize the metaboxes array, this holds all the widgets for wp-admin
+
+        global $wp_meta_boxes;
+
+        // Get the regular dashboard widgets array 
+        // (which has our new widget already but at the end)
+
+        $normal_dashboard = $wp_meta_boxes['dashboard']['normal']['core'];
+
+        // Backup and delete our new dashbaord widget from the end of the array
+
+        $example_widget_backup = array('aweber_dashboard_widget' => $normal_dashboard['aweber_dashboard_widget']);
+        unset($normal_dashboard['aweber_dashboard_widget']);
+
+        // Merge the two arrays together so our widget is at the beginning
+
+        $sorted_dashboard = array_merge($example_widget_backup, $normal_dashboard);
+
+        // Save the sorted array back into the original metaboxes 
+
+        $wp_meta_boxes['dashboard']['normal']['core'] = $sorted_dashboard;
+    }
+
+    function aweber_dashboard_widget_control() {
+        wp_dashboard_rss_control( 'aweber_dashboard_widget' );
+    }
+
+    function add_checkbox()
+    {
+        $options = get_option($this->widgetOptionsName);
+        ?>
+        <p>
+        <input value="1" id="aweber_checkbox" type="checkbox" style="width:inherit;" name="aweber_signup_checkbox"/>
+            <label for="aweber_checkbox">
+            <?php echo $options['create_subscriber_signup_text'];?>
+            </label>
+        </p>
+        </br>
+        <?php
+    }
+
+    function deauthorize()
+    {
+        $admin_options = get_option($this->adminOptionsName);
+        $admin_options = array(
+            'consumer_key' => null,
+            'consumer_secret' => null,
+            'access_key' => null,
+            'access_secret' => null,
+        );
+        update_option($this->adminOptionsName, $admin_options);
+        $options = get_option($this->widgetOptionsName);
+        $options['list_id_create_subscriber'] = null;
+        update_option($this->widgetOptionsName, $options);
+        delete_option('aweber_webform_oauth_id');
+        delete_option('aweber_webform_oauth_removed');
+    }
+
+    function create_subscriber($email, $ip, $list_id, $name)
+    {
+        $admin_options = get_option($this->adminOptionsName);
+        try {
+            $aweber = $this->_get_aweber_api($admin_options['consumer_key'], $admin_options['consumer_secret']);
+            $account = $aweber->getAccount($admin_options['access_key'], $admin_options['access_secret']);
+            $subs = $account->loadFromUrl('/accounts/' . $account->id . '/lists/' . $list_id . '/subscribers');
+            return $subs->create(array(
+                                    'email' => $email,
+                                    'ip_address' => $ip,
+                                    'name' => $name,
+                                    'ad_tracking' => 'Wordpress',
+                                ));
+        }
+        catch (Exception $exc) {
+            #List ID was not in this account
+            if ($exc->type === 'NotFoundError') {
+                $options = get_option($this->widgetOptionsName);
+                $options['list_id_create_subscriber'] = null;
+                update_option($this->widgetOptionsName, $options);
+            }
+            #Authorization is invalid
+            if ($exc->type === 'UnauthorizedError')
+                $this->deauthorize();
+        }
+    }
+
+
+    function grab_email_from_comment($comment_id, $comment = null)
+    {
+        if ($_POST['aweber_signup_checkbox'] != 1)
+            return;
+
+        $options = get_option($this->widgetOptionsName);
+
+        $comment_id = (int) $comment_id;
+
+        if(!is_object($comment)) 
+            $comment = get_comment($comment_id);
+        else
+            return;
+
+        $email = $comment->comment_author_email;
+        $name = $comment->comment_author;
+        $ip = $comment->comment_author_IP;
+
+        $sub = $this->create_subscriber($email, $ip, $options['list_id_create_subscriber'], $name);
+    }
+
+    function grab_email_from_registration()
+    {
+        if ($_POST['aweber_signup_checkbox'] != 1)
+            return;
+        if(isset($_POST['user_email'])) {
+            $email = $_POST['user_email'];
+            $user = $_POST['user_login'];
+            $ip = ($_SERVER['X_FORWARDED_FOR']) ? $_SERVER['X_FORWARDED_FOR'] : $_SERVER['REMOTE_ADDR'];
+            $options = get_option($this->widgetOptionsName);
+            $sub = $this->create_subscriber($email, $ip, $options['list_id_create_subscriber'], '');
+        }
     }
 
     /**
@@ -56,7 +287,6 @@ class AWeberWebformPlugin {
         */
     function getAdminOptions() {
         $pluginAdminOptions = array(
-            'aweber_id'       => null,
             'consumer_key'    => null,
             'consumer_secret' => null,
             'access_key'      => null,
@@ -79,7 +309,7 @@ class AWeberWebformPlugin {
         * @return void
         */
     function printAdminPage() {
-        $options = $this->getAdminOptions();
+        $options = get_option($this->adminOptionsName);
         include(dirname(__FILE__) . '/aweber_forms_import_admin.php');
     }
 
@@ -94,6 +324,10 @@ class AWeberWebformPlugin {
             'list'         => null,
             'webform'      => null,
             'form_snippet' => null,
+            'list_id_create_subscriber' => null,
+            'create_subscriber_comment_checkbox' => 'ON',
+            'create_subscriber_registration_checkbox' => 'ON',
+            'create_subscriber_signup_text' => "Sign up to our newsletter!",
         );
         $options = get_option($this->widgetOptionsName);
         if (!empty($options)) {
@@ -142,7 +376,7 @@ class AWeberWebformPlugin {
         * @return AWeberAPI
         */
     function _get_aweber_api($consumer_key, $consumer_secret) {
-        return new AWeberAPI($consumer_key, $consumer_secret);
+        return new AWeberAPIVer1_1($consumer_key, $consumer_secret);
     }
 
     /**
@@ -153,13 +387,13 @@ class AWeberWebformPlugin {
         */
     function printWidgetControl() {
         if (isset($_POST[$this->widgetOptionsName])) {
-            $options = $this->getWidgetOptions();
+            $options = get_option($this->widgetOptionsName);
             $widget_data = $_POST[$this->widgetOptionsName];
             if (isset($widget_data['submit']) && $widget_data['submit']) {
                 $options['list'] = $widget_data['list'];
                 $options['webform'] = $widget_data[$widget_data['list']]['webform'];
                 if ($options['webform']) {
-                    $admin_options = $this->getAdminOptions();
+                    $admin_options = get_option($this->adminOptionsName);
                     $aweber = $this->_get_aweber_api($admin_options['consumer_key'], $admin_options['consumer_secret']);
                     try {
                         $account = $aweber->getAccount($admin_options['access_key'], $admin_options['access_secret']);
@@ -236,15 +470,15 @@ class AWeberWebformPlugin {
         * @return void
         */
     function printWidgetControlAjax() {
-        $options = $this->getWidgetOptions();
-        $admin_options = $this->getAdminOptions();
+        $options = get_option($this->widgetOptionsName);
+        $admin_options = get_option($this->adminOptionsName);
 
         // Render form
         $list = $options['list'];
         $webform = $options['webform'];
 
-        $aweber = $this->_get_aweber_api($admin_options['consumer_key'], $admin_options['consumer_secret']);
         try {
+            $aweber = $this->_get_aweber_api($admin_options['consumer_key'], $admin_options['consumer_secret']);
             $account = $aweber->getAccount($admin_options['access_key'], $admin_options['access_secret']);
         } catch (AWeberException $e) {
             $account = null;
@@ -420,7 +654,7 @@ form</a> in order to place it on your Wordpress blog.
         * @return string
         */
     function getWebformSnippet() {
-        $options = $this->getWidgetOptions();
+        $options = get_option($this->widgetOptionsName);
         return $options['form_snippet'];
     }
 }

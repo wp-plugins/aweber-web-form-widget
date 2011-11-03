@@ -22,11 +22,84 @@ class AWeberCollection extends AWeberResponse implements ArrayAccess, Iterator, 
      * @return AWeberEntry
      */
     public function getById($id) {
+        $data = $this->adapter->request('GET', "{$this->url}/{$id}");
+        return $this->_makeEntry($data, $id, "{$this->url}/{$id}");
+    }
+
+
+    /**
+     * create
+     *
+     * Invoke the API method to CREATE a new entry resource.
+     *
+     * Note: Not all entry resources are eligible to be created, please
+     *       refer to the AWeber API Reference Documentation at
+     *       https://labs.aweber.com/docs/reference/1.0 for more
+     *       details on which entry resources may be created and what
+     *       attributes are required for creating resources.
+     *
+     * @access public
+     * @param params mixed  associtative array of key/value pairs.
+     * @return AWeberEntry(Resource) The new resource created
+     */
+    public function create($kv_pairs) {
+        # Create Resource
+        $params = array_merge(array('ws.op' => 'create'), $kv_pairs);
+        $data = $this->adapter->request('POST', $this->url, $params, array('return' => 'headers'));
+        $this->_entries = array();
+
+        # Return new Resource
+        $url = $data['Location'];
+        $resource_data = $this->adapter->request('GET', $url);
+        return new AWeberEntry($resource_data, $url, $this->adapter);
+    }
+
+    /**
+     * find
+     *
+     * Invoke the API 'find' operation on a collection to return a subset
+     * of that collection.  Not all collections support the 'find' operation.
+     * refer to https://labs.aweber.com/docs/reference/1.0 for more information.
+     *
+     * @param mixed $search_data   Associative array of key/value pairs used as search filters
+     *                             * refer to https://labs.aweber.com/docs/reference/1.0 for a
+     *                               complete list of valid search filters.
+     *                             * filtering on attributes that require additional permissions to
+     *                               display requires an app authorized with those additional permissions.
+     * @access public
+     * @return AWeberCollection 
+     */
+    public function find($search_data) {
+        # invoke find operation
+        $params = array_merge($search_data, array('ws.op' => 'find'));
+        $data = $this->adapter->request('GET', $this->url, $params);
+
+        # get total size
+        $ts_params = array_merge($params, array('ws.show' => 'total_size'));
+        $total_size = $this->adapter->request('GET', $this->url, $ts_params, array('return' => 'integer'));
+        $data['total_size'] = $total_size;
+
+        # return collection
+        return $this->readResponse($data, $this->url);
+    }
+
+    /** getParentEntry
+     *
+     * Gets an entry's parent entry
+     * Returns NULL if no parent entry
+     */
+    public function getParentEntry(){
+        $url_parts = split('/', $this->url);
+        $size = count($url_parts);
+
+        #Remove collection id and slash from end of url
+        $url = substr($this->url, 0, -strlen($url_parts[$size-1])-1);
+
         try {
-            $data = $this->adapter->request('GET', "{$this->url}/{$id}");
-            return $this->_makeEntry($data, $id, "{$this->url}/{$id}");
-        } catch (AWeberException $e) {
-            return null;
+            $data = $this->adapter->request('GET', $url);
+            return new AWeberEntry($data, $url, $this->adapter);
+        } catch (Exception $e) {
+            return NULL;
         }
     }
 
@@ -102,20 +175,15 @@ class AWeberCollection extends AWeberResponse implements ArrayAccess, Iterator, 
      * @access protected
      * @return void
      */
-    protected function _loadPageForOffset($offset, $attempt=1) {
+    protected function _loadPageForOffset($offset) {
         $this->_calculatePageSize();
         $start = round($offset / $this->pageSize) * $this->pageSize;
         $params = $this->_getPageParams($start, $this->pageSize);
 
         // Loading page
-        try {
-            $data = $this->adapter->request('GET', $this->url, $params);
-            $this->adapter->debug = false;
-        }
-        catch (Exception $e) {
-            if ($attempt < 3) $this->_loadPageForOffset($offset, ++$attempt);
-            return;
-        }
+        $data = $this->adapter->request('GET', $this->url, $params);
+        $this->adapter->debug = false;
+
         $rekeyed = array();
         foreach ($data['entries'] as $key => $entry) {
             $rekeyed[$key+$data['start']] = $entry;
