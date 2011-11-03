@@ -6,7 +6,7 @@ Requires at least: 2.7.0
 Tested up to: 3.2.1
 Stable tag: 1.1
 
-This plugin allows you to quickly and easily install an AWeber web form on your WordPress blog and to let visitors subscribe to your list when commenting or registering on your blog, all using AWeber's API.
+Allows you to install an AWeber web form on your WordPress blog and lets visitors subscribe to your list when commenting or registering on your blog.
 
 == Description ==
 
