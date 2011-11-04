@@ -1,13 +1,14 @@
 <?php
 /*
 Plugin Name: AWeber Web Forms
-Plugin URI: http://labs.aweber.com
+Plugin URI: http://www.aweber.com/faq/questions/588/How+Do+I+Use+AWeber%27s+Webform+Widget+for+Wordpress%3F
 Description: Adds your AWeber Web Form to your sidebar
-Version: 1.0.4
-Author: AWeber Communications, Inc.
-Author URI: http://labs.aweber.com
+Version: 1.1.1
+Author: AWeber
+Author URI: http://www.aweber.com
 License: MIT
 */
+
 
 if (function_exists('register_activation_hook')) {
     if (!function_exists('aweber_web_forms_activate')) {
@@ -30,6 +31,18 @@ if (!class_exists('AWeberWebformPlugin')) {
     require_once(dirname(__FILE__) . '/php/aweber_api/aweber_api.php');
     require_once(dirname(__FILE__) . '/php/aweber_webform_plugin.php');
     $aweber_webform_plugin = new AWeberWebformPlugin();
+
+    $options = get_option('AWeberWebformPluginWidgetOptions');
+    if ($options['create_subscriber_comment_checkbox'] == 'ON' && is_numeric($options['list_id_create_subscriber']))
+    {
+        add_action('comment_form',array(&$aweber_webform_plugin,'add_checkbox'));
+        add_action('comment_post',array(&$aweber_webform_plugin,'grab_email_from_comment'));
+    }
+    if ($options['create_subscriber_registration_checkbox'] == 'ON' && is_numeric($options['list_id_create_subscriber']))
+    {
+        add_action('register_form',array(&$aweber_webform_plugin,'add_checkbox'));
+        add_action('register_post',array(&$aweber_webform_plugin,'grab_email_from_registration'));
+    }
 }
 
 // Initialize admin panel.
@@ -42,9 +55,20 @@ if (!function_exists('AWeberFormsWidgetController_ap')) {
         if (function_exists('add_options_page')) {
             add_options_page('AWeber Web Form', 'AWeber Web Form', 'manage_options', basename(__FILE__), array(&$aweber_webform_plugin, 'printAdminPage'));
         }
-
+        if (function_exists('add_filter')) {
+            add_filter("plugin_action_links_aweber-web-form-widget/aweber.php", 'add_aweber_settings_link');
+        }
     }
 }
+
+if (!function_exists('add_aweber_settings_link')) {
+    function add_aweber_settings_link($links) {
+            $settings_link = '<a href="options-general.php?page=aweber.php">Settings</a>';
+            array_unshift($links, $settings_link);
+            return $links;
+    }
+}
+
 if (!function_exists('AWeberRegisterSettings')) {
 
     function AWeberAuthMessage() {
@@ -57,6 +81,9 @@ if (!function_exists('AWeberRegisterSettings')) {
             global $aweber_webform_plugin;
             register_setting($aweber_webform_plugin->oauthOptionsName, 'aweber_webform_oauth_id');
             register_setting($aweber_webform_plugin->oauthOptionsName, 'aweber_webform_oauth_removed');
+            register_setting($aweber_webform_plugin->oauthOptionsName, 'aweber_comment_checkbox_toggle');
+            register_setting($aweber_webform_plugin->oauthOptionsName, 'aweber_registration_checkbox_toggle');
+            register_setting($aweber_webform_plugin->oauthOptionsName, 'aweber_signup_text_value');
 
             $pluginAdminOptions = get_option($aweber_webform_plugin->adminOptionsName);
             if ($pluginAdminOptions['access_key'] == '') {
@@ -91,6 +118,7 @@ if (isset($aweber_webform_plugin)) {
     add_action('admin_print_scripts', array(&$aweber_webform_plugin, 'addHeaderCode'));
     add_action('wp_ajax_get_widget_control', array(&$aweber_webform_plugin, 'printWidgetControlAjax'));
 
+    add_action('wp_dashboard_setup', array(&$aweber_webform_plugin, 'aweber_add_dashboard_widgets'));
     // Filters
 }
 ?>

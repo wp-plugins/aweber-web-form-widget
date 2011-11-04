@@ -1,9 +1,11 @@
 <?php
+
 require_once('exceptions.php');
 require_once('oauth_adapter.php');
 require_once('oauth_application.php');
 require_once('aweber_response.php');
 require_once('aweber_collection.php');
+require_once('aweber_entry_data_array.php');
 require_once('aweber_entry.php');
 
 /**
@@ -39,6 +41,10 @@ class AWeberServiceProvider implements OAuthServiceProvider {
 
     public function getBaseUri() {
         return $this->baseUri;
+    }
+
+    public function removeBaseUri($url) {
+        return str_replace($this->getBaseUri(), '', $url);
     }
 
     public function getAccessTokenUrl() {
@@ -79,7 +85,7 @@ class AWeberAPIBase {
         'broadcast_campaign'   => array('links', 'messages'),
         'followup_campaign'    => array('links', 'messages'),
         'link'                 => array('clicks'),
-        'list'                 => array('campaigns', 'subscribers',
+        'list'                 => array('campaigns', 'custom_fields', 'subscribers',
                                         'web_forms', 'web_form_split_tests'),
         'web_form'             => array(),
         'web_form_split_test'  => array('components'),
@@ -96,12 +102,8 @@ class AWeberAPIBase {
      * @return AWeberEntry or AWeberCollection
      */
     public function loadFromUrl($url) {
-        try {
-            $data = $this->adapter->request('GET', $url);
-            return $this->readResponse($data, $url);
-        } catch (AWeberException $e) {
-            return null;
-        }
+        $data = $this->adapter->request('GET', $url);
+        return $this->readResponse($data, $url);
     }
 
     protected function _cleanUrl($url) {
@@ -286,6 +288,9 @@ class AWeberAPI extends AWeberAPIBase {
     public function getAccessToken() {
         return $this->adapter->getAccessToken();
     }
+}
+
+class AWeberAPIVer1_1 extends AWeberAPI {
 }
 
 ?>
