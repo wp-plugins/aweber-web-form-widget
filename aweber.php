@@ -3,7 +3,7 @@
 Plugin Name: AWeber Web Forms
 Plugin URI: http://www.aweber.com/faq/questions/588/How+Do+I+Use+AWeber%27s+Webform+Widget+for+Wordpress%3F
 Description: Adds your AWeber Web Form to your sidebar
-Version: 1.1.1
+Version: 1.1.2
 Author: AWeber
 Author URI: http://www.aweber.com
 License: MIT
@@ -35,7 +35,15 @@ if (!class_exists('AWeberWebformPlugin')) {
     $options = get_option('AWeberWebformPluginWidgetOptions');
     if ($options['create_subscriber_comment_checkbox'] == 'ON' && is_numeric($options['list_id_create_subscriber']))
     {
+        /* The following line adds the checkbox to the comment form.
+         * If problems persist, the code can be changed to
+         * any of the following 3 lines. Just add a # before
+         * the line that is currently active, and remove the
+         * # from the line you wish to use. */
         add_action('comment_form',array(&$aweber_webform_plugin,'add_checkbox'));
+        #add_filter('comment_form_after_fields',array(&$aweber_webform_plugin,'add_checkbox'));
+        #add_filter('thesis_hook_after_comment_box',array(&$aweber_webform_plugin,'add_checkbox'));
+        // End
         add_action('comment_post',array(&$aweber_webform_plugin,'grab_email_from_comment'));
     }
     if ($options['create_subscriber_registration_checkbox'] == 'ON' && is_numeric($options['list_id_create_subscriber']))
@@ -43,6 +51,9 @@ if (!class_exists('AWeberWebformPlugin')) {
         add_action('register_form',array(&$aweber_webform_plugin,'add_checkbox'));
         add_action('register_post',array(&$aweber_webform_plugin,'grab_email_from_registration'));
     }
+    add_action('comment_unapproved_to_approved',array(&$aweber_webform_plugin,'comment_approved'));
+    add_action('comment_spam_to_approved',array(&$aweber_webform_plugin,'comment_approved'));
+    add_action('delete_comment',array(&$aweber_webform_plugin,'comment_deleted'));
 }
 
 // Initialize admin panel.

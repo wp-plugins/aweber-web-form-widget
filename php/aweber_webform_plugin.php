@@ -57,6 +57,7 @@ class AWeberWebformPlugin {
             'create_subscriber_comment_checkbox' => 'ON',
             'create_subscriber_registration_checkbox' => 'ON',
             'create_subscriber_signup_text' => "Sign up to our newsletter!",
+            'create_sub_comment_ids' => array(),
         );
         foreach ($keys as $key => $value) {
             if ($options[$key] == null)
@@ -229,26 +230,67 @@ class AWeberWebformPlugin {
         }
     }
 
-
-    function grab_email_from_comment($comment_id, $comment = null)
+    function comment_approved($comment)
     {
-        if ($_POST['aweber_signup_checkbox'] != 1)
-            return;
-
         $options = get_option($this->widgetOptionsName);
+        $send_coi = $this->find_comment_id($comment->comment_ID);
+        if ($send_coi) {
+            $this->create_from_comment($comment);
+        }
+    }
 
-        $comment_id = (int) $comment_id;
+    function find_comment_id($comment_id)
+    {
+        $options = get_option($this->widgetOptionsName);
+        $index = array_search($comment_id, $options['create_sub_comment_ids']);
+        if ($index) {
+            unset($options['create_sub_comment_ids'][$index]);
+            #re-index the array
+            $options['create_sub_comment_ids'] = array_values($options['create_sub_comment_ids']);
+            update_option($this->widgetOptionsName, $options);
+            return true;
+        }
+        else {
+            return false;
+        }
+    }
 
-        if(!is_object($comment)) 
-            $comment = get_comment($comment_id);
-        else
-            return;
+    function comment_deleted($comment_id)
+    {
+        $this->find_comment_id($comment_id);
+    }
+
+    function create_from_comment($comment) {
+        $options = get_option($this->widgetOptionsName);
 
         $email = $comment->comment_author_email;
         $name = $comment->comment_author;
         $ip = $comment->comment_author_IP;
 
         $sub = $this->create_subscriber($email, $ip, $options['list_id_create_subscriber'], $name);
+    }
+
+    function grab_email_from_comment($comment_id, $comment = null)
+    {
+        if ($_POST['aweber_signup_checkbox'] != 1)
+            return;
+
+        $comment_id = (int) $comment_id;
+        $comment = get_comment($comment_id);
+        if(!$comment)
+            return;
+
+        $options = get_option($this->widgetOptionsName);
+
+        if ($comment->comment_approved == 1)
+            $this->create_from_comment($comment);
+        else {
+            if(count($options['create_sub_comment_ids']) >= 10000) {
+                array_shift($options['create_sub_comment_ids']);
+            }
+            array_push($options['create_sub_comment_ids'], $comment->comment_ID);
+            update_option($this->widgetOptionsName, $options);
+        }
     }
 
     function grab_email_from_registration()
@@ -328,6 +370,7 @@ class AWeberWebformPlugin {
             'create_subscriber_comment_checkbox' => 'ON',
             'create_subscriber_registration_checkbox' => 'ON',
             'create_subscriber_signup_text' => "Sign up to our newsletter!",
+            'create_sub_comment_ids' => array(),
         );
         $options = get_option($this->widgetOptionsName);
         if (!empty($options)) {
@@ -376,7 +419,7 @@ class AWeberWebformPlugin {
         * @return AWeberAPI
         */
     function _get_aweber_api($consumer_key, $consumer_secret) {
-        return new AWeberAPIVer1_1($consumer_key, $consumer_secret);
+        return new AWeberAPI($consumer_key, $consumer_secret);
     }
 
     /**

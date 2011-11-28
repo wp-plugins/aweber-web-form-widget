@@ -4,7 +4,7 @@ Donate link: http://www.aweber.com
 Tags: email, marketing, email marketing, webform, web, form, aweber, mailing list, API, newsletter
 Requires at least: 2.7.0
 Tested up to: 3.2.1
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 
 Allows you to install an AWeber web form on your WordPress blog and lets visitors subscribe to your list when commenting or registering on your blog.
 
@@ -38,7 +38,7 @@ You'll be taken to a page with an authorization code (it will be a long string o
 
 Back in your Wordpress account, just paste the authorization code into the space provided and click the "Make Connection" button.
 
-To allow people to subscribe to a list when they leave a comment or register for your blog, first choose the list from the dropdown under the "Subscribe By Commenting" heading. Second, make sure that the appropriate subscribe methods are checked (via comments or blog registrations). Third, enter the text you'd like to appear next to the checkbox people will use to subscribe in the "Promotion Text" area (or simply leave the default "Sign up to our newsletter!" text). Once you're done, just hit the "Save" button.
+To allow people to subscribe to a list when you approve their comment or they register for your blog, first choose the list from the dropdown under the "Subscribe By Commenting" heading. Second, make sure that the appropriate subscribe methods are checked (via comments or blog registrations). Third, enter the text you'd like to appear next to the checkbox people will use to subscribe in the "Promotion Text" area (or simply leave the default "Sign up to our newsletter!" text). Once you're done, just hit the "Save" button.
 
 To place your AWeber web form, head over to the Widgets page under Appearance on the left side of your Wordpress dashboard.
 
@@ -76,6 +76,18 @@ If you just created the web form, try refreshing the page and looking again.
 
 Also, check any other lists that appear in the first drop down in the Web Form widget - it's important to make sure that you're working in the list you want subscribers to be added to.
 
+= Someone Commented on My Blog, But They Weren't Added to My List. =
+
+In order to prevent comment spammers from adding bad email addresses to your list, the plugin only adds comments that have been approved. Once a comment is manually or automatically approved, the person who left the comment will be added to your list.
+
+= How Can I Adjust the Subscribe On Comment Checkbox's Position? =
+
+Certain WordPress themes may have the option to change the position of the subscribe on comment checkbox. However, doing so requires manually editing the plugin code. If you are not comfortable doing this, please consult your web designer.
+
+The file you need to edit is called aweber.php. Near the top of the file (around line 38), you will see comments instructing you on how to make the necessary changes. 
+
+For more detail, please <a href="http://www.aweber.com/faq/questions/588#box">consult our knowledge base</a>.
+
 == Screenshots ==
 
 1. 
@@ -83,6 +95,10 @@ Also, check any other lists that appear in the first drop down in the Web Form w
 3. 
 
 == Changelog ==
+= 1.1.2 =
+* Subscribers will only be added on comments after the comment is approved.
+* Comments added to aweber.php to adjust checkbox position for some WordPress themes.
+
 = 1.1.1 =
 * Modified error message when authentication fails to provide a link to reconnect your widget to an AWeber customer account.
 * Changed the URL for the AWeber blog to prevent multiple redirects when the dashboard fetches the AWeber blog.
