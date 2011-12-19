@@ -69,8 +69,7 @@ class AWeberWebformPlugin {
     // Create the function to output the contents of our Dashboard Widget
 
     function aweber_dashboard_widget_function() {
-        define('DOING_AJAX', true);
-        wp_dashboard_cached_rss_widget('aweber_dashboard_widget', 'wp_dashboard_rss_output');
+        $this->aweber_wp_dashboard_cached_rss_widget('aweber_dashboard_widget', 'wp_dashboard_rss_output');
         $pluginAdminOptions = get_option($this->adminOptionsName);
         $options = get_option($this->widgetOptionsName);
         if ($pluginAdminOptions['access_key']) {
@@ -127,8 +126,39 @@ class AWeberWebformPlugin {
         <?php
     }
 
-    // Create the function use in the action hook
+    /* Copied from WP code
+    /  Modified to remove doing_AJAX global
+    */
+    function aweber_wp_dashboard_cached_rss_widget( $widget_id, $callback, $check_urls = array() ) {
+        $loading = '<p class="widget-loading hide-if-no-js">' . __( 'Loading&#8230;' ) . '</p><p class="hide-if-js">' . __( 'This widget requires JavaScript.' ) . '</p>';
 
+        if ( empty($check_urls) ) {
+            $widgets = get_option( 'dashboard_widget_options' );
+            if ( empty($widgets[$widget_id]['url']) ) {
+                echo $loading;
+                return false;
+            }
+            $check_urls = array( $widgets[$widget_id]['url'] );
+        }
+
+        $cache_key = 'dash_' . md5( $widget_id );
+        if ( false !== ( $output = get_transient( $cache_key ) ) ) {
+            echo $output;
+            return true;
+        }
+
+        if ( $callback && is_callable( $callback ) ) {
+            $args = array_slice( func_get_args(), 2 );
+            array_unshift( $args, $widget_id );
+            ob_start();
+            call_user_func_array( $callback, $args );
+            set_transient( $cache_key, ob_get_flush(), 43200); // Default lifetime in cache of 12 hours (same as the feeds)
+        }
+
+        return true;
+    }
+
+    // Create the function use in the action hook
     function aweber_add_dashboard_widgets() {
         $widget_options = get_option('dashboard_widget_options');
         if (!isset($widget_options['aweber_dashboard_widget'])) {
