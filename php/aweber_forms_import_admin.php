@@ -21,7 +21,11 @@
                 if ($oauth_removed == 'FALSE') {
                     if (get_option('aweber_comment_checkbox_toggle') == 'OFF' and
                         get_option('aweber_registration_checkbox_toggle') == 'OFF')
+                    {
+                        $options['create_subscriber_comment_checkbox'] = 'OFF';
+                        $options['create_subscriber_registration_checkbox'] = 'OFF';
                         echo '<div id="message" class="updated"><p>Your settings were saved.</p></div>';
+                    }
                     else
                         echo $this->messages['no_list_selected'];
                 }
@@ -140,6 +144,8 @@
 <input type="text" size="50" name="aweber_signup_text" id="aweber-create-subscriber-signup-text" value="<?php echo $options['create_subscriber_signup_text'];?>" />
 </br>
 
+</table>
+
 <p class="submit">
                     <input type="submit" id="aweber-settings-save-button" class="button-primary" value="<?php _e('Save') ?>" />
                 </p>
@@ -182,7 +188,8 @@
                     jQuery('#aweber-settings-hidden-signup-text-value').val(jQuery('#aweber-create-subscriber-signup-text').val());
                 });
                 jQuery('#aweber-create-subscriber-comment-checkbox').live('change', function() {
-                    if (jQuery(this).attr('checked') != undefined) {
+                    if (jQuery(this).attr('checked') != undefined &&
+                        jQuery(this).attr('checked') != false) {
                         jQuery('#aweber-settings-hidden-comment-checkbox-value').val('ON');
                     }
                     else {
@@ -190,7 +197,8 @@
                     }
                 });
                 jQuery('#aweber-create-subscriber-registration-checkbox').live('change', function() {
-                    if (jQuery(this).attr('checked') != undefined) {
+                    if (jQuery(this).attr('checked') != undefined &&
+                        jQuery(this).attr('checked') != false) {
                         jQuery('#aweber-settings-hidden-registration-checkbox-value').val('ON');
                     }
                     else {
