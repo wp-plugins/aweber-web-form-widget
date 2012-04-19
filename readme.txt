@@ -4,7 +4,7 @@ Donate link: http://www.aweber.com
 Tags: email, marketing, email marketing, webform, web, form, aweber, mailing list, API, newsletter
 Requires at least: 2.7.0
 Tested up to: 3.3
-Stable tag: 1.1.4
+Stable tag: 1.1.5
 
 Allows you to install an AWeber web form on your WordPress blog and lets visitors subscribe to your list when commenting or registering on your blog.
 
@@ -95,6 +95,11 @@ For more detail, please <a href="http://www.aweber.com/faq/questions/588#box">co
 3. 
 
 == Changelog ==
+= 1.1.5 =
+* Remove usage of deprecated split function.
+* Make authentication error messages return more information to assist in troubleshooting api issues.
+* Perform db cleanup when an authorization code is not valid.
+
 = 1.1.4 =
 * Fixed minor bugs with HTML and jQuery.
 

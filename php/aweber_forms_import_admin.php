@@ -52,15 +52,29 @@
                 elseif ($oauth_id and !$pluginAdminOptions['access_secret']) {
                     // Then they just saved a key and didn't remove anything
                     // Check it's validity then save it for later use
+                    $error_code = "";
                     try {
                         list($consumer_key, $consumer_secret, $access_key, $access_secret) = AWeberAPI::getDataFromAweberID($oauth_id);
-                    } catch (AWeberException $e) {
+                    } catch (AWeberAPIException $exc) {
                         list($consumer_key, $consumer_secret, $access_key, $access_secret) = null;
-                    } catch (AWeberOAuthException $e) {
-                        list($consumer_key, $consumer_secret, $access_key, $access_secret) = null;
+                        # make error messages customer friendly.
+                        $descr = $exc->description;
+                        $descr = preg_replace('/http.*$/i', '', $descr);     # strip labs.aweber.com documentation url from error message
+                        $descr = preg_replace('/[\.\!:]+.*$/i', '', $descr); # strip anything following a . : or ! character
+                        $error_code = " ($descr)";
                     }
                     if (!$access_secret) {
-                        echo $this->messages['access_token_failed'];
+                        $msg =  '<div id="aweber_access_token_failed" class="error">';
+                        $msg .= "Invalid authorization code$error_code:<br />";
+
+                        # show oauth_id if it failed and an api exception was not raised
+                        if ($error_code == "") { 
+                            $msg .= "$oauth_id <br />";
+                        }
+
+                        $msg .= "Please make sure you entered the complete authorization code.</div>";
+                        echo $msg;
+                        $this->deauthorize();
                     } else {
                         $pluginAdminOptions = array(
                             'consumer_key' => $consumer_key,

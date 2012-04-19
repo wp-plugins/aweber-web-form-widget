@@ -24,6 +24,7 @@ class AWeberAPIException extends AWeberException {
         $this->type = $error['type'];
         $this->status = $error['status'];
         $this->message = $error['message'];
+        $this->description = $error['message'];
         $this->documentation_url = $error['documentation_url'];
 
         parent::__construct($this->message);

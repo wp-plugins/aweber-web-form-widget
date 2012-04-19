@@ -175,13 +175,15 @@ class OAuthApplication implements AWeberOAuthAdapter {
         $resp = $this->makeRequest('POST', $this->app->getAccessTokenUrl(),
             array('oauth_verifier' => $this->user->verifier)
         );
+        if($resp->headers['Status-Code'] >= 400) {
+            $data = json_decode($resp->body, true);
+            throw new AWeberAPIException($data['error'], "");
+        }
         $data = $this->parseResponse($resp);
         $this->requiredFromResponse($data, array('oauth_token', 'oauth_token_secret'));
-
         if (empty($data['oauth_token'])) {
             throw new AWeberOAuthDataMissing('oauth_token');
         }
-
         $this->user->accessToken = $data['oauth_token'];
         $this->user->tokenSecret = $data['oauth_token_secret'];
         return array($data['oauth_token'], $data['oauth_token_secret']);
@@ -378,10 +380,10 @@ class OAuthApplication implements AWeberOAuthAdapter {
         $method = $this->encode(strtoupper($method));
         $query = parse_url($url, PHP_URL_QUERY);
         if ($query) {
-            $url = array_shift(split('\?', $url, 2));
-            $items = split('&', $query);
+            $url = array_shift(explode('?', $url, 2));
+            $items = explode('&', $query);
             foreach ($items as $item) {
-                list($key, $value) = split('=', $item);
+                list($key, $value) = explode('=', $item);
                 $data[$key] = $value;
             }
         }

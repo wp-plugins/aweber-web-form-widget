@@ -19,7 +19,6 @@ class AWeberWebformPlugin {
         $this->messages['auth_required'] = '<div id="aweber_auth_error" class="error">AWeber Web Form requires authentication. You will need you to update your <a href="' . $aweber_settings_url . '">settings</a> in order to continue to use AWeber Web Form.</div>';
         $this->messages['auth_error'] = '<div id="aweber_auth_error" class="error">AWeber Web Form authentication failed.  Please verify the <a href="' . admin_url('options-general.php?page=aweber.php') . '">settings</a> to continue to use AWeber Web Form.</div>';
         $this->messages['auth_failed'] = '<div id="aweber_auth_failed" class="error">AWeber Web Form authentication failed, <a href="' . admin_url('options-general.php?page=aweber.php') . '">please reconnect</a>.  </div>';
-        $this->messages['access_token_failed'] = '<div id="aweber_access_token_failed" class="error">Invalid authorization code.  Please make sure you entered it correctly.</div>';
         $this->messages['signup_text_too_short'] = '<div id="aweber_signup_text_too_long" class="error">The signup text was too short. Please make sure it is at least 7 characters.</div>';
         $this->messages['no_list_selected'] = '<div id="aweber_no_list_selected" class="error">Your changes were not saved, as no list was selected.</div>';
 
