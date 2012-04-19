@@ -62,7 +62,10 @@
                         $descr = preg_replace('/http.*$/i', '', $descr);     # strip labs.aweber.com documentation url from error message
                         $descr = preg_replace('/[\.\!:]+.*$/i', '', $descr); # strip anything following a . : or ! character
                         $error_code = " ($descr)";
+                    } catch (AWeberOAuthDataMissing $exc) {
+                        list($consumer_key, $consumer_secret, $access_key, $access_secret) = null;
                     }
+
                     if (!$access_secret) {
                         $msg =  '<div id="aweber_access_token_failed" class="error">';
                         $msg .= "Invalid authorization code$error_code:<br />";
