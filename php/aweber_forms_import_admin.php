@@ -62,17 +62,21 @@
                         $descr = preg_replace('/http.*$/i', '', $descr);     # strip labs.aweber.com documentation url from error message
                         $descr = preg_replace('/[\.\!:]+.*$/i', '', $descr); # strip anything following a . : or ! character
                         $error_code = " ($descr)";
+                    } catch (AWeberOAuthDataMissing $exc) {
+                        list($consumer_key, $consumer_secret, $access_key, $access_secret) = null;
+                    } catch (AWeberException $exc) {
+                        list($consumer_key, $consumer_secret, $access_key, $access_secret) = null;
                     }
+
                     if (!$access_secret) {
                         $msg =  '<div id="aweber_access_token_failed" class="error">';
-                        $msg .= "Invalid authorization code$error_code:<br />";
+                        $msg .= "Unable to connect to your AWeber Account$error_code:<br />";
 
                         # show oauth_id if it failed and an api exception was not raised
                         if ($error_code == "") { 
-                            $msg .= "$oauth_id <br />";
+                            $msg .= "Authorization code entered was: $oauth_id <br />";
                         }
-
-                        $msg .= "Please make sure you entered the complete authorization code.</div>";
+                        $msg .= "Please make sure you entered the complete authorization code and try again.</div>";
                         echo $msg;
                         $this->deauthorize();
                     } else {

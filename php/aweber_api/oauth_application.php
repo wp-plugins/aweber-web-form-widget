@@ -175,14 +175,29 @@ class OAuthApplication implements AWeberOAuthAdapter {
         $resp = $this->makeRequest('POST', $this->app->getAccessTokenUrl(),
             array('oauth_verifier' => $this->user->verifier)
         );
+
+        if(!$resp) {
+            # they are unable to make an outbound request to AWebers API
+            $error = array('message' => 'Unable to connect to the AWeber API');
+            throw new AWeberAPIException($error, '');
+        }
+
         if($resp->headers['Status-Code'] >= 400) {
             $data = json_decode($resp->body, true);
             throw new AWeberAPIException($data['error'], "");
         }
         $data = $this->parseResponse($resp);
-        $this->requiredFromResponse($data, array('oauth_token', 'oauth_token_secret'));
+        try {
+            $this->requiredFromResponse($data, array('oauth_token', 'oauth_token_secret'));
+        } catch (AWeberOAuthDataMissing $exc) {
+            $data['oauth_token'] = null;
+            $data['oauth_token_secret'] = null;
+        }
+
         if (empty($data['oauth_token'])) {
-            throw new AWeberOAuthDataMissing('oauth_token');
+            $status = $resp->headers['Status'];
+            $error = array('message' => "Did not receive a valid response from the AWeber API, got $status");
+            throw new AWeberAPIException($error, '');
         }
         $this->user->accessToken = $data['oauth_token'];
         $this->user->tokenSecret = $data['oauth_token_secret'];
