@@ -14,20 +14,25 @@
 
                 $authorize_success = False;
                 $button_value = 'Make Connection';
+                $temp_error = null;
+                $error = null;
 
                 // Check to see if they removed the connection
                 $authorization_removed = False;
-                if ($oauth_removed == 'TRUE') $authorization_removed = True;
+                if ($oauth_removed == 'TRUE' || (!empty($_GET['reauth']) && $_GET['reauth'] == True)) {
+                    $authorization_removed = True;
+                }
                 if ($oauth_removed == 'FALSE') {
                     if (get_option('aweber_comment_checkbox_toggle') == 'OFF' and
                         get_option('aweber_registration_checkbox_toggle') == 'OFF')
                     {
                         $options['create_subscriber_comment_checkbox'] = 'OFF';
                         $options['create_subscriber_registration_checkbox'] = 'OFF';
-                        echo '<div id="message" class="updated"><p>Your settings were saved.</p></div>';
                     }
-                    else
+                    else {
                         echo $this->messages['no_list_selected'];
+                        $error = True;
+                    }
                 }
 
                 if (is_numeric($oauth_removed)) {
@@ -38,7 +43,6 @@
                         echo $this->messages['signup_text_too_short'];
                     else {
                         $options['create_subscriber_signup_text'] = get_option('aweber_signup_text_value');
-                        echo '<div id="message" class="updated"><p>Your settings were saved.</p></div>';
                     }
                     update_option($this->widgetOptionsName, $options);
                 }
@@ -48,6 +52,7 @@
                     $pluginAdminOptions = get_option($this->adminOptionsName);
                     $options = get_option($this->widgetOptionsName);
                     echo '<div id="message" class="updated"><p>Your connection to your AWeber account has been closed.</p></div>';
+                    $error = $temp_error = null;
                 }
                 elseif ($oauth_id and !$pluginAdminOptions['access_secret']) {
                     // Then they just saved a key and didn't remove anything
@@ -71,6 +76,7 @@
                     if (!$access_secret) {
                         $msg =  '<div id="aweber_access_token_failed" class="error">';
                         $msg .= "Unable to connect to your AWeber Account$error_code:<br />";
+                        $error = True;
 
                         # show oauth_id if it failed and an api exception was not raised
                         if ($error_code == "") { 
@@ -91,17 +97,24 @@
                 }
                 if ($pluginAdminOptions['access_key']) {
                     extract($pluginAdminOptions);
+                    $error_ = null;
                     try {
                         $aweber = $this->_get_aweber_api($consumer_key, $consumer_secret);
                         $account = $aweber->getAccount($access_key, $access_secret);
                     } catch (AWeberException $e) {
+                        $error_ = get_class($e);
                         $account = null;
                     }
                     if (!$account) {
-                        $this->deauthorize();
                         $pluginAdminOptions = get_option($this->adminOptionsName);
                         $options = get_option($this->widgetOptionsName);
-                        echo $this->messages['auth_failed'];
+                        if($error_ != 'AWeberOAuthException' && $error_ != 'AWeberOAuthDataMissing') {
+                            echo $this->messages['temp_error'];
+                            $temp_error = True;
+                        } else {
+                            $this->deauthorize();
+                            echo $this->messages['auth_failed'];
+                        }
                     }
                     else {
                         $authorize_success = True;
@@ -109,8 +122,14 @@
                     }
                 }
 
+                if(empty($_GET['updated']) || $error || $temp_error) {
+                    ?>
+                    <script type="text/javascript">
+                        jQuery("#setting-error-settings_updated").hide();
+                    </script>
+                    <?php
+                }
                 // Checks to see if the widget is installed
-                // Not used yet, waiting on wireframe
                 $aweber_option_name = strtolower($this->widgetOptionsName);
                 $installed_widget = false;
 
@@ -175,6 +194,9 @@
                 <input type="hidden" id="aweber-settings-hidden-signup-text-value" name="aweber_signup_text_value" value="<?php echo $options['create_subscriber_signup_text'];?>" />
 
 
+            <?php } else if($temp_error || $error) { ?>
+                <br />
+                <br />
             <?php } else { ?>
                 <tr valign="top">
                 <th scope="row">Step 1:</th>
@@ -187,13 +209,13 @@
                 <td><input type="text" name="aweber_webform_oauth_id"/></td>
                 </table>
                 <p class="submit">
+                    <input type="hidden" name="_wp_http_referer" value="<?php echo admin_url('options-general.php?page=aweber.php'); ?>" />
                     <input type="submit" id="aweber-settings-button" class="button-primary" value="<?php _e($button_value) ?>" />
                 </p>
             <?php } ?>
             <?php if ($authorization_removed or $authorize_success): ?>
                 <script type="text/javascript" >
                     jQuery.noConflict();
-                    jQuery("#setting-error-settings_updated").hide();
                     jQuery("#aweber_auth_error").hide();
                 </script>
             <?php endif ?>

@@ -21,6 +21,7 @@ class AWeberWebformPlugin {
         $this->messages['auth_failed'] = '<div id="aweber_auth_failed" class="error">AWeber Web Form authentication failed, <a href="' . admin_url('options-general.php?page=aweber.php') . '">please reconnect</a>.  </div>';
         $this->messages['signup_text_too_short'] = '<div id="aweber_signup_text_too_long" class="error">The signup text was too short. Please make sure it is at least 7 characters.</div>';
         $this->messages['no_list_selected'] = '<div id="aweber_no_list_selected" class="error">Your changes were not saved, as no list was selected.</div>';
+        $this->messages['temp_error'] = '<div id="aweber_temp_error" class="error">Unable to connect to AWeber\'s API.  Please refresh the page, or <a href="' . admin_url('options-general.php?page=aweber.php&reauth=true') . '">attempt to reauthorize.</a></div>';
 
         $this->ensure_defaults();
     }
