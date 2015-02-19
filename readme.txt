@@ -95,6 +95,9 @@ For more detail, please <a href="http://www.aweber.com/faq/questions/588#box">co
 3. 
 
 == Changelog ==
+= 1.1.13 =
+* Upgrade PHP client library
+
 = 1.1.12 =
 * Update 'Tested up to' to 4.1
 
