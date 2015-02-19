@@ -3,7 +3,7 @@
 Plugin Name: AWeber Web Forms
 Plugin URI: http://www.aweber.com/faq/questions/588/How+Do+I+Use+AWeber%27s+Webform+Widget+for+Wordpress%3F
 Description: Adds your AWeber Web Form to your sidebar
-Version: 1.1.12
+Version: 1.1.13
 Author: AWeber
 Author URI: http://www.aweber.com
 License: MIT

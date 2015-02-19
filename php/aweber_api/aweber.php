@@ -81,8 +81,8 @@ class AWeberAPIBase {
      */
     static protected $_collectionMap = array(
         'account'              => array('lists', 'integrations'),
-        'broadcast_campaign'   => array('links', 'messages'),
-        'followup_campaign'    => array('links', 'messages'),
+        'broadcast_campaign'   => array('links', 'messages', 'stats'),
+        'followup_campaign'    => array('links', 'messages', 'stats'),
         'link'                 => array('clicks'),
         'list'                 => array('campaigns', 'custom_fields', 'subscribers',
                                         'web_forms', 'web_form_split_tests'),
@@ -122,7 +122,7 @@ class AWeberAPIBase {
         $this->adapter->parseAsError($response);
         if (!empty($response['id'])) {
             return new AWeberEntry($response, $url, $this->adapter);
-        } else if (isset($response['entries'])) {
+        } else if (array_key_exists('entries', $response)) {
             return new AWeberCollection($response, $url, $this->adapter);
         }
         return false;
