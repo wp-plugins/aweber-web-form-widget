@@ -4,7 +4,7 @@ Donate link: http://www.aweber.com
 Tags: email, marketing, email marketing, webform, web, form, aweber, mailing list, API, newsletter
 Requires at least: 2.7.0
 Tested up to: 4.1
-Stable tag: 1.1.12
+Stable tag: 1.1.14
 
 Allows you to install an AWeber web form on your WordPress blog and lets visitors subscribe to your list when commenting or registering on your blog.
 
@@ -16,7 +16,7 @@ In addition, you can allow visitors to your blog to sign up as they leave a comm
 
 = Learn More About AWeber =
 
-<a href="http://www.aweber.com/">AWeber</a> is an email marketing service that helps users to stay in contact with their website visitors, blog readers and customers. Take a look at <a href="http://www.aweber.com/email-marketing-features.htm">what AWeber has to offer</a> and get started with a brand new account for <a href="https://www.aweber.com/order.htm">just a dollar</a>.
+<a href="http://www.aweber.com/">AWeber</a> is an email marketing service that helps users to stay in contact with their website visitors, blog readers and customers. Take a look at <a href="http://www.aweber.com/email-marketing-features.htm">what AWeber has to offer</a> and get started with a <a href="https://www.aweber.com/order.htm">free 30-day trial</a>.
 
 = How Was This Widget Made? =
 
@@ -95,6 +95,9 @@ For more detail, please <a href="http://www.aweber.com/faq/questions/588#box">co
 3. 
 
 == Changelog ==
+= 1.1.14 =
+* Update readme.txt with free trial reference
+
 = 1.1.13 =
 * Upgrade PHP client library
 
